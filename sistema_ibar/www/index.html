@@ -1,0 +1,318 @@
+<html><head><base href="." />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>App Mobile</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: #f5f5f5;
+}
+
+.app {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.header {
+    background: #2196F3;
+    color: white;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.sidebar {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    background: white;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar-header {
+    background: #1976D2;
+    color: white;
+    padding: 1rem;
+    font-size: 1.2rem;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 1rem 0;
+}
+
+.sidebar-menu li {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-menu li:hover {
+    background: #f0f0f0;
+}
+
+.sidebar-menu li svg {
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+}
+
+.content {
+    padding: 1rem;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 999;
+}
+
+.overlay.active {
+    display: block;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.card-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 1rem;
+}
+
+.card h3 {
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.card p {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+    <div class="header">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <h1>IBAR</h1>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            Menu
+        </div>
+        <ul class="sidebar-menu">
+            <li onclick="navigateTo('aprovacoes')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Aprovações
+            </li>
+            <li onclick="navigateTo('consultas')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Consultas
+            </li>
+            <li onclick="logout()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                Sair
+            </li>
+        </ul>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="content" id="content">
+        <h2>Bem-vindo!</h2>
+        <p>Selecione uma opção no menu.</p>
+    </div>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function navigateTo(page) {
+    const content = document.getElementById('content');
+    toggleSidebar();
+
+    switch(page) {
+        case 'aprovacoes':
+            content.innerHTML = `
+                <h2>Aprovações</h2>
+                <div style="padding: 1rem;">
+                    <div class="card" onclick="navigateToSubPage('pedidos')">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <h3>Pedidos</h3>
+                        <p>Gerencie e aprove pedidos pendentes</p>
+                    </div>
+
+                    <div class="card" onclick="navigateToSubPage('workflow')">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2">
+                            <path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                        </svg>
+                        <h3>Workflow</h3>
+                        <p>Acompanhe e gerencie os fluxos de trabalho</p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'consultas':
+            content.innerHTML = `
+                <h2>Consultas</h2>
+                <div style="margin: 1rem;">
+                    <input type="text" placeholder="Buscar..." style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <button style="margin-top: 1rem; padding: 0.8rem; background: #2196F3; color: white; border: none; border-radius: 4px; width: 100%;">
+                        Pesquisar
+                    </button>
+                </div>
+            `;
+            break;
+    }
+}
+
+function navigateToSubPage(page) {
+    const content = document.getElementById('content');
+
+    switch(page) {
+        case 'pedidos':
+            content.innerHTML = `
+                <h2>Pedidos</h2>
+                <p>Lista de pedidos pendentes de aprovação:</p>
+                <div style="padding: 1rem;">
+                    <div class="card">
+                        <h3>Pedido #1234</h3>
+                        <p>Solicitante: João Silva</p>
+                        <p>Data: 01/01/2024</p>
+                    </div>
+                    <div class="card">
+                        <h3>Pedido #5678</h3>
+                        <p>Solicitante: Maria Santos</p>
+                        <p>Data: 02/01/2024</p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'workflow':
+            content.innerHTML = `
+                <h2>Workflow</h2>
+                <p>Fluxos de trabalho ativos:</p>
+                <div style="padding: 1rem;">
+                    <div class="card">
+                        <h3>Processo #ABC123</h3>
+                        <p>Status: Em andamento</p>
+                        <p>Responsável: Carlos Oliveira</p>
+                    </div>
+                    <div class="card">
+                        <h3>Processo #DEF456</h3>
+                        <p>Status: Aguardando aprovação</p>
+                        <p>Responsável: Ana Souza</p>
+                    </div>
+                </div>
+            `;
+            break;
+    }
+}
+
+function logout() {
+    if (confirm('Deseja realmente sair?')) {
+        alert('Logout realizado com sucesso!');
+        window.location.href = "https://seuapp.com/login";
+    }
+}
+
+document.body.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+}, { passive: false });
+
+let touchstartX = 0;
+let touchendX = 0;
+
+document.addEventListener('touchstart', e => {
+    touchstartX = e.changedTouches[0].screenX;
+});
+
+document.addEventListener('touchend', e => {
+    touchendX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    if (touchendX < touchstartX && touchendX + 50 < touchstartX) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    }
+    if (touchendX > touchstartX && touchendX > touchstartX + 50 && touchstartX < 50) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+</script>
+
+</body></html>
