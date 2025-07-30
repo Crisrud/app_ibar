@@ -336,8 +336,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
                               onTap: () => _showDetailsDialog(context, requisicao),
                             ),
                         ])
-
-
                       );
                     },
                   ),
