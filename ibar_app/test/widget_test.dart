@@ -60,6 +60,29 @@ void main() {
     expect(find.text('Por favor, digite sua senha'), findsOneWidget);
   });
 
+  testWidgets('preserves username spaces in the authentication request', (
+    WidgetTester tester,
+  ) async {
+    String? submittedUsername;
+    final auth = ProtheusAuth(
+      tokenStorage: _MemoryTokenStorage(),
+      client: MockClient((request) async {
+        submittedUsername = request.headers['username'];
+        return http.Response('', 401);
+      }),
+    );
+    addTearDown(auth.dispose);
+
+    await _pumpApp(tester, auth);
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), '  user  ');
+    await tester.enterText(fields.at(1), 'password');
+    await tester.tap(find.text('Entrar'));
+    await tester.pumpAndSettle();
+
+    expect(submittedUsername, '  user  ');
+  });
+
   testWidgets('shows an unavailable state instead of a fake query form', (
     WidgetTester tester,
   ) async {

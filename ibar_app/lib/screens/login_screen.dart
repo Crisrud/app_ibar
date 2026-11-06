@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      login(_emailController.text.trim(), _passwordController.text);
+      login(_emailController.text, _passwordController.text);
     }
   }
 
