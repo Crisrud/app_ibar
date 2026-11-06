@@ -65,6 +65,7 @@ void main() {
   });
 
   group('ProtheusApiClient', () {
+    const token = 'test-access-token';
     final config = ApiConfig.development();
 
     test('sends the confirmed bearer token and parses JSON', () async {
@@ -85,7 +86,7 @@ void main() {
 
       final result = await client.getJson(
         config.serviceUri('/api/requisicoes'),
-        token: 'test-access-token',
+        token: token,
       );
 
       expect(
@@ -95,6 +96,27 @@ void main() {
       expect(result, {
         'items': [1, 2],
       });
+    });
+
+    test('sends the provided bearer token on POST requests', () async {
+      http.Request? capturedRequest;
+      final client = ProtheusApiClient(
+        config: config,
+        httpClient: MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('', 200);
+        }),
+      );
+
+      await client.postJson(
+        config.serviceUri('/api/requisicoes'),
+        token: token,
+      );
+
+      expect(
+        capturedRequest!.headers['authorization'],
+        'Bearer test-access-token',
+      );
     });
 
     test(

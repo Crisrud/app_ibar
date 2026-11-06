@@ -8,7 +8,7 @@ import 'package:ibar_app/services/protheus_api_client.dart';
 import 'package:ibar_app/services/protheus_operations_api.dart';
 
 void main() {
-  const token = 'session-access-token';
+  const token = 'protheus-access-token-123';
   final config = ApiConfig.development();
 
   test('loads open requisitions through the shared client', () async {
