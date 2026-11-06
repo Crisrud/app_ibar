@@ -74,8 +74,17 @@ class ApiConfig {
   Uri approvalUri(String path) => approvalBaseUri.resolve(path);
 
   void validateRequestUri(Uri uri) {
+    validateRequestUriForBuild(this, uri, isRelease: kReleaseMode);
+  }
+
+  @visibleForTesting
+  static void validateRequestUriForBuild(
+    ApiConfig config,
+    Uri uri, {
+    required bool isRelease,
+  }) {
     _validateUri(uri);
-    if (isProduction) _requireHttps(uri);
+    if (config.isProduction || isRelease) _requireHttps(uri);
   }
 
   static void _validateUri(Uri uri) {

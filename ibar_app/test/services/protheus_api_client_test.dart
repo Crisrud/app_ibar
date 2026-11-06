@@ -49,6 +49,19 @@ void main() {
         Uri.parse('https://protheus.example.com:10099/api/requisicoes'),
       );
     });
+
+    test('release validation rejects HTTP with a development config', () {
+      final config = ApiConfig.development();
+
+      expect(
+        () => ApiConfig.validateRequestUriForBuild(
+          config,
+          Uri.parse('http://protheus.example.com:10099/api/requisicoes'),
+          isRelease: true,
+        ),
+        throwsA(isA<ProtheusApiConfigurationException>()),
+      );
+    });
   });
 
   group('ProtheusApiClient', () {
