@@ -1,13 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:ibar_app/screens/home_screen.dart';
 import 'package:ibar_app/screens/login_screen.dart';
+import 'package:ibar_app/services/api_config.dart';
 import 'package:ibar_app/services/protheus_auth.dart';
+import 'package:ibar_app/services/protheus_api_client.dart';
+import 'package:ibar_app/services/protheus_operations_api.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (context) => ProtheusAuth())],
+      providers: [
+        ChangeNotifierProvider(create: (context) => ProtheusAuth()),
+        Provider<ApiConfig>(create: (_) => ApiConfig.development()),
+        Provider<ProtheusApiClient>(
+          create:
+              (context) => ProtheusApiClient(
+                config: context.read<ApiConfig>(),
+                httpClient: http.Client(),
+              ),
+          dispose: (_, client) => client.close(),
+        ),
+        Provider<ProtheusOperationsApi>(
+          create:
+              (context) => ProtheusOperationsApi(
+                config: context.read<ApiConfig>(),
+                client: context.read<ProtheusApiClient>(),
+              ),
+        ),
+      ],
       child: const MyApp(),
     ),
   );

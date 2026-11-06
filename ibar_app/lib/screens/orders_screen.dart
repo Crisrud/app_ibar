@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ibar_app/widgets/full_width_card.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import 'package:provider/provider.dart';
 
 import '../services/protheus_auth.dart';
+import '../services/protheus_api_client.dart';
+import '../services/protheus_operations_api.dart';
 import 'login_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -68,12 +68,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   Future<void> _aprovarRequisicao(Map<String, dynamic> requisicao) async {
     try {
-      // Mostrar diálogo de confirmação
       final confirmado = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Confirmar Aprovação'),
-          content: Text('Deseja aprovar a requisição #${requisicao['num']}?'),
+          title: const Text('Confirmar Aprova\u00e7\u00e3o'),
+          content: Text('Deseja aprovar a requisi\u00e7\u00e3o #${requisicao['num']}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -86,47 +85,31 @@ class _OrdersScreenState extends State<OrdersScreen> {
           ],
         ),
       );
+      if (!mounted) return;
 
       if (confirmado == true) {
-        // Chamar API para aprovar
+        final token = _sessionTokenOrLogin();
+        if (token == null) return;
+        final api = context.read<ProtheusOperationsApi>();
         setState(() => isLoading = true);
-        // Chamar API para aprovar todos os itens
         final items = requisicao['itemsrc'] as List? ?? [];
         var nCount = 0;
-        for (var item in items) {
-          final response = await http.post(
-            Uri.parse(
-                'http://192.168.101.244:10111/rest/api/ibar/wsaprovarrequisicao'),
-            body: json.encode({
-              'id': item['id'], // Agora usando o ID do item específico
-              'acao': 'aprovar',
-            }),
-            headers: {'Content-Type': 'application/json'},
-          );
+        for (final item in items) {
+          await api.approveItem(itemId: item['id'], token: token);
+          nCount++;
+        }
 
-
-          if (response.statusCode == 200) {
-            nCount++;
-          } else {
-            throw Exception('Erro na API: ${response.statusCode}');
-          }
-        }// final do for
-
-        // Verifica se todos os itens foram aprovados
         if (nCount > 0 && mounted && nCount == items.length) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Requisição #${requisicao['num']} aprovada!')),
+            SnackBar(content: Text('Requisi\u00e7\u00e3o #${requisicao['num']} aprovada!')),
           );
-          _fetchRequisicoes(); // Recarregar a lista
+          _fetchRequisicoes();
         } else {
           throw Exception('Nenhum item aprovado');
         }
-
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao aprovar: $e')),
-      );
+    } catch (error) {
+      await _showOperationError('aprovar', error);
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -134,13 +117,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   Future<void> _rejeitarRequisicao(Map<String, dynamic> requisicao) async {
     try {
-      // Mostrar diálogo com campo de justificativa
       final justificativa = await showDialog<String>(
         context: context,
         builder: (context) {
           final controller = TextEditingController();
           return AlertDialog(
-            title: const Text('Rejeitar Requisição'),
+            title: const Text('Rejeitar Requisi\u00e7\u00e3o'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -169,34 +151,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
           );
         },
       );
+      if (!mounted) return;
 
       if (justificativa != null && justificativa.isNotEmpty) {
-        // Chamar API para rejeitar
+        final token = _sessionTokenOrLogin();
+        if (token == null) return;
         setState(() => isLoading = true);
-
-        final response = await http.post(
-          Uri.parse('http://192.168.101.244:10111/rest/api/ibar/wsrejeitarrequisicao'),
-          body: json.encode({
-            'id': requisicao['id'],
-            'acao': 'rejeitar',
-            'justificativa': justificativa,
-          }),
-          headers: {'Content-Type': 'application/json'},
+        await context.read<ProtheusOperationsApi>().rejectRequisition(
+          requisitionId: requisicao['id'],
+          justification: justificativa,
+          token: token,
         );
-
-        if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Requisição #${requisicao['num']} rejeitada!')),
-          );
-          _fetchRequisicoes(); // Recarregar a lista
-        } else {
-          throw Exception('Erro na API: ${response.statusCode}');
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Requisi\u00e7\u00e3o #${requisicao['num']} rejeitada!')),
+        );
+        _fetchRequisicoes();
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao rejeitar: $e')),
-      );
+    } catch (error) {
+      await _showOperationError('rejeitar', error);
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -231,64 +204,83 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
 
   Future<void> _fetchRequisicoes() async {
+    final token = _sessionTokenOrLogin();
+    if (token == null) return;
+
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
     try {
-
-      final protheusAuth = Provider.of<ProtheusAuth>(context, listen: false);
-      final token = protheusAuth.token;
-
-      if (token == null || token.isEmpty) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sessão expirada. Faça login novamente.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-        return;
-      }
-
-
-      final response = await http.get(
-        Uri.parse('http://187.50.41.226:10099/api/ibar/wsrequisicoes?ctipo=abertas'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
+      final result = await context
+          .read<ProtheusOperationsApi>()
+          .getOpenRequisitions(token: token);
       if (!mounted) return;
-
       setState(() {
-        isLoading = true;
-        errorMessage = '';
+        requisicoes = result;
+        isLoading = false;
       });
-
-      if (response.statusCode == 200) {
-        // Método 1: Tentativa padrão com UTF-8
-        String decodedBody = utf8.decode(response.bodyBytes, allowMalformed: true);
-
-        final data = json.decode(decodedBody);
-
-        setState(() {
-          requisicoes = data['items'] ?? []; // Acessa o array 'items' da resposta
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Erro ao carregar requisições: ${response.statusCode}';
-          isLoading = false;
-        });
+    } catch (error) {
+      if (error is ProtheusApiHttpException && error.statusCode == 401) {
+        await _expireSession();
       }
-    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        errorMessage = 'Erro de conexão: $e';
+        errorMessage = error is ProtheusApiNetworkException
+            ? 'Erro de conex\u00e3o: $error'
+            : 'Erro ao carregar requisi\u00e7\u00f5es: $error';
         isLoading = false;
       });
     }
+  }
+
+  String? _sessionTokenOrLogin() {
+    final token = context.read<ProtheusAuth>().token;
+    if (token != null && token.isNotEmpty) return token;
+    if (!mounted) return null;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sess\u00e3o expirada. Fa\u00e7a login novamente.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+    return null;
+  }
+
+  Future<void> _showOperationError(String operation, Object error) async {
+    if (!mounted) return;
+    if (error is ProtheusApiHttpException && error.statusCode == 401) {
+      await _expireSession();
+      return;
+    }
+    final message = error is ProtheusApiNetworkException
+        ? 'Erro de conex\u00e3o: $error'
+        : 'Erro ao $operation: $error';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _expireSession() async {
+    if (!mounted) return;
+    try {
+      await context.read<ProtheusAuth>().logout();
+    } catch (_) {
+      // Continue to login even if persisted-session cleanup fails.
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sess\u00e3o expirada. Fa\u00e7a login novamente.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override

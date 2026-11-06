@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
 import 'package:ibar_app/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../services/protheus_auth.dart';
+import '../services/protheus_api_client.dart';
+import '../services/protheus_operations_api.dart';
 
 class Catraca extends StatefulWidget {
   const Catraca({super.key});
@@ -57,64 +56,58 @@ class _Catraca extends State<Catraca> {
     super.dispose();
   }
 
-  Future<String?> _getToken() async {
-    const String url = 'http://187.50.41.226:10099/api/oauth2/v1/token';
-    const String username = 'CRISTIANOS';
-    const String password = '121001';
+  String? _sessionTokenOrLogin() {
+    final token = context.read<ProtheusAuth>().token;
+    if (token != null && token.isNotEmpty) return token;
+    if (!mounted) return null;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sess\u00e3o expirada. Fa\u00e7a login novamente.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+    return null;
+  }
 
+  Future<void> _expireSession() async {
+    if (!mounted) return;
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'grant_type': 'password',
-          'username': username,
-          'password': password,
-
-        },
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        return data['access_token'];
-      } else {
-        throw Exception('Falha ao obter token: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Erro na conexão: $e');
+      await context.read<ProtheusAuth>().logout();
+    } catch (_) {
+      // Continue to login even if persisted-session cleanup fails.
     }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sess\u00e3o expirada. Fa\u00e7a login novamente.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   Future<void> _liberarCatraca() async {
-    // 1. Validações iniciais
     if (_matriculaController.text.isEmpty) {
-      setState(() => _errorMessage = 'Por favor, digite a matrícula');
+      setState(() => _errorMessage = 'Por favor, digite a matr\u00edcula');
       return;
     }
 
-    if (_horaextra && (_horaInicialController.text.isEmpty || _horaFinalController.text.isEmpty)) {
-      setState(() => _errorMessage = 'Preencha os horários para hora extra');
+    if (_horaextra &&
+        (_horaInicialController.text.isEmpty ||
+            _horaFinalController.text.isEmpty)) {
+      setState(() => _errorMessage = 'Preencha os hor\u00e1rios para hora extra');
       return;
     }
 
-    // 2. Obter token
-    final protheusAuth = Provider.of<ProtheusAuth>(context, listen: false);
-    final token = protheusAuth.token;
-
-    if (token == null || token.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sessão expirada. Faça login novamente.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-      return;
-    }
+    final token = _sessionTokenOrLogin();
+    if (token == null) return;
 
     setState(() {
       _isLoading = true;
@@ -122,7 +115,6 @@ class _Catraca extends State<Catraca> {
     });
 
     try {
-      // 3. Determinar tipo baseado nas seleções
       final String tipo;
       if (_atraso) {
         tipo = '2';
@@ -130,79 +122,56 @@ class _Catraca extends State<Catraca> {
         tipo = '3';
       } else if (_horaextra) {
         tipo = '4';
-        // Validação adicional para horas extras
         final horaInicialError = _validateHora(_horaInicialController.text);
         final horaFinalError = _validateHora(_horaFinalController.text);
-
         if (horaInicialError != null || horaFinalError != null) {
           setState(() => _errorMessage = horaInicialError ?? horaFinalError);
           return;
         }
       } else {
-        tipo = '1'; // Tipo padrão
+        tipo = '1';
       }
 
-      // 4. Construir parâmetros da requisição
-      final params = {
-        'cmat': _matriculaController.text,
-        'ctipo': tipo,
-      };
-
-      // Adiciona horários se for hora extra
-      if (_horaextra) {
-        params.addAll({
-          'hinicial': _horaInicialController.text,
-          'hfinal': _horaFinalController.text,
-        });
-      }
-
-      // 5. Fazer requisição
-      final response = await http.post(
-        Uri.parse('http://187.50.41.226:10099/catraca').replace(queryParameters: params),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+      await context.read<ProtheusOperationsApi>().releaseTurnstile(
+        token: token,
+        matricula: _matriculaController.text,
+        tipo: tipo,
+        horaInicial: _horaextra ? _horaInicialController.text : null,
+        horaFinal: _horaextra ? _horaFinalController.text : null,
       );
 
-      // 6. Tratar resposta
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Catraca liberada para ${_matriculaController.text}'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        // Limpa os campos após sucesso
-        _matriculaController.clear();
-        if (_horaextra) {
-          _horaInicialController.clear();
-          _horaFinalController.clear();
-        }
-      } else {
-        final errorMessage = jsonDecode(response.body)['message'] ?? 'Erro desconhecido';
-        throw Exception('Falha ao liberar: $errorMessage (${response.statusCode})');
-      }
-    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
+          content: Text('Catraca liberada para ${_matriculaController.text}'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+      _matriculaController.clear();
+      if (_horaextra) {
+        _horaInicialController.clear();
+        _horaFinalController.clear();
       }
+    } catch (error) {
+      if (error is ProtheusApiHttpException && error.statusCode == 401) {
+        await _expireSession();
+      } else if (mounted) {
+        final message = error is ProtheusApiNetworkException
+            ? 'Erro de conex\u00e3o: $error'
+            : 'Falha ao liberar a catraca: $error';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
