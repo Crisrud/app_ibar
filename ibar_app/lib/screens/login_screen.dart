@@ -11,23 +11,17 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-
-
-
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  String? _token;
-
 
   Future<void> login(String usuario, String pass) async {
     final protheusAuth = Provider.of<ProtheusAuth>(context, listen: false);
 
     try {
       final sucess = await protheusAuth.signUp(usuario, pass);
-      print('token: ${protheusAuth.token}');
+      if (!mounted) return;
 
       if (sucess) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -76,16 +70,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 130,
                     height: 130,
                     decoration: BoxDecoration(
-                     // color: Colors.blue,
+                      // color: Colors.blue,
                       //borderRadius: BorderRadius.circular(160),
                     ),
                     child: ClipOval(
                       child: Padding(
-                        padding: const EdgeInsets.all(10.0), // Ajuste esse valor conforme necessário
-                      child:
-                        Image.asset(
-                        'assets/images/logo.png', // Substitua pelo caminho da sua imagem
-                        fit: BoxFit.contain,
+                        padding: const EdgeInsets.all(
+                          10.0,
+                        ), // Ajuste esse valor conforme necessário
+                        child: Image.asset(
+                          'assets/images/logo.png', // Substitua pelo caminho da sua imagem
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -104,9 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Faça login para continuar',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 48),
 
@@ -163,7 +158,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          await login(_emailController.text, _passwordController.text);
+                          await login(
+                            _emailController.text,
+                            _passwordController.text,
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -190,7 +188,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Funcionalidade ainda não implementada'),
+                          content: Text(
+                            'Funcionalidade ainda não implementada',
+                          ),
                         ),
                       );
                     },

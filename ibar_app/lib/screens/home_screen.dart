@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ibar_app/constants/colors.dart';
 import 'package:ibar_app/screens/approvals_screen.dart';
 import 'package:ibar_app/screens/queries_screen.dart';
+import 'package:ibar_app/screens/login_screen.dart';
 import 'package:ibar_app/widgets/menu_item.dart';
+import 'package:ibar_app/services/protheus_auth.dart';
+import 'package:provider/provider.dart';
 
 import 'catraca.dart';
 
@@ -50,44 +52,61 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _logout() {
-    showDialog(
+  Future<void> _logout() async {
+    final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sair'),
-        content: const Text('Deseja realmente sair?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Sair'),
+            content: const Text('Deseja realmente sair?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Sair'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              SystemNavigator.pop();
-            },
-            child: const Text('Sair'),
-          ),
-        ],
-      ),
     );
+    if (shouldLogout != true || !mounted) return;
+
+    try {
+      await Provider.of<ProtheusAuth>(context, listen: false).logout();
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao encerrar sess\u00e3o: $error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   late double _startX;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-    onHorizontalDragStart: (details) {
-      _startX = details.globalPosition.dx;
-    },
-    onHorizontalDragUpdate: (details) {
-      final currentX = details.globalPosition.dx;
-      if (currentX - _startX > 50 && _startX < 50 && !_isMenuOpen) {
-        _toggleMenu();
-      } else if (_startX - currentX > 50 && _isMenuOpen) {
-        _toggleMenu();
-      }
-    },
+      onHorizontalDragStart: (details) {
+        _startX = details.globalPosition.dx;
+      },
+      onHorizontalDragUpdate: (details) {
+        final currentX = details.globalPosition.dx;
+        if (currentX - _startX > 50 && _startX < 50 && !_isMenuOpen) {
+          _toggleMenu();
+        } else if (_startX - currentX > 50 && _isMenuOpen) {
+          _toggleMenu();
+        }
+      },
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
         body: Stack(
@@ -99,9 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (_isMenuOpen)
               GestureDetector(
                 onTap: _toggleMenu,
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                ),
+                child: Container(color: Colors.black.withOpacity(0.5)),
               ),
 
             // Menu lateral
@@ -170,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _toggleMenu,
           ),
         ),
-      )
+      ),
     );
   }
 }
