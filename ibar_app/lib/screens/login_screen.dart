@@ -16,11 +16,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false;
 
   Future<void> login(String usuario, String pass) async {
-    final protheusAuth = Provider.of<ProtheusAuth>(context, listen: false);
-
     try {
+      final protheusAuth = Provider.of<ProtheusAuth>(context, listen: false);
       final success = await protheusAuth.signUp(usuario, pass);
       if (!mounted) return;
 
@@ -44,6 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro: $error')));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -126,8 +130,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: _submit,
-                            child: const Text('Entrar'),
+                            onPressed: _isSubmitting ? null : _submit,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_isSubmitting) ...[
+                                  const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                const Text('Entrar'),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -143,7 +162,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _submit() {
+    if (_isSubmitting) return;
+
     if (_formKey.currentState?.validate() ?? false) {
+      setState(() => _isSubmitting = true);
       login(_emailController.text, _passwordController.text);
     }
   }
