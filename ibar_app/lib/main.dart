@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ibar_app/constants/colors.dart';
 import 'package:http/http.dart' as http;
 import 'package:ibar_app/screens/home_screen.dart';
 import 'package:ibar_app/screens/login_screen.dart';
@@ -71,27 +72,139 @@ class _MyAppState extends State<MyApp> {
       title: 'IBAR',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryColor,
+          primary: AppColors.primaryColor,
+          surface: AppColors.surfaceColor,
+        ),
+        scaffoldBackgroundColor: AppColors.backgroundColor,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.surfaceColor,
+          foregroundColor: AppColors.primaryDarkColor,
+          elevation: 0,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            color: AppColors.primaryDarkColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        cardTheme: CardThemeData(
+          color: AppColors.surfaceColor,
+          elevation: 1,
+          shadowColor: AppColors.cardShadowColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.borderColor),
+          ),
+          margin: EdgeInsets.zero,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.surfaceColor,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(
+              color: AppColors.primaryColor,
+              width: 1.5,
+            ),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryColor,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        textTheme: const TextTheme(
+          headlineSmall: TextStyle(
+            color: AppColors.primaryDarkColor,
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+          ),
+          titleLarge: TextStyle(
+            color: AppColors.primaryDarkColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+          titleMedium: TextStyle(fontWeight: FontWeight.w600),
+          bodyMedium: TextStyle(color: AppColors.mutedColor, height: 1.45),
+        ),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home:
           _isLoading || !auth.isInitialized
-              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-              : auth.sessionError != null
               ? Scaffold(
-                body: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
+                body: SafeArea(
+                  child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(auth.sessionError!, textAlign: TextAlign.center),
+                        const CircularProgressIndicator(),
                         const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _restoreSession,
-                          child: const Text('Tentar novamente'),
+                        Text(
+                          'Preparando seu acesso...',
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
+                    ),
+                  ),
+                ),
+              )
+              : auth.sessionError != null
+              ? Scaffold(
+                body: SafeArea(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 440),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              size: 44,
+                              color: AppColors.primaryColor,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              auth.sessionError!,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: _restoreSession,
+                              child: const Text('Tentar novamente'),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

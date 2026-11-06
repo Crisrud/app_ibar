@@ -1,58 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:ibar_app/constants/colors.dart';
 import 'package:ibar_app/screens/approvals_screen.dart';
-import 'package:ibar_app/screens/queries_screen.dart';
+import 'package:ibar_app/screens/catraca.dart';
 import 'package:ibar_app/screens/login_screen.dart';
-import 'package:ibar_app/widgets/menu_item.dart';
+import 'package:ibar_app/screens/queries_screen.dart';
+import 'package:ibar_app/screens/workflow_screen.dart';
 import 'package:ibar_app/services/protheus_auth.dart';
+import 'package:ibar_app/widgets/full_width_card.dart';
+import 'package:ibar_app/widgets/menu_item.dart';
 import 'package:provider/provider.dart';
 
-import 'catraca.dart';
-
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  bool _isMenuOpen = false;
-  Widget _currentScreen = const Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('Bem-vindo!', style: TextStyle(fontSize: 24)),
-        SizedBox(height: 16),
-        Text('Selecione uma opção no menu.', style: TextStyle(fontSize: 16)),
-      ],
-    ),
-  );
-
-  void _toggleMenu() {
-    setState(() {
-      _isMenuOpen = !_isMenuOpen;
-    });
+  void _openScreen(BuildContext context, Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
-  void _navigateTo(String route) {
-    setState(() {
-      _isMenuOpen = false;
-      switch (route) {
-        case 'approvals':
-          _currentScreen = const ApprovalsScreen();
-          break;
-        case 'queries':
-          _currentScreen = const QueriesScreen();
-          break;
-        case 'catraca':
-          _currentScreen = const Catraca();
-          break;
-      }
-    });
+  void _openScreenFromDrawer(BuildContext context, Widget screen) {
+    Navigator.pop(context);
+    _openScreen(context, screen);
   }
 
-  Future<void> _logout() async {
+  Future<void> _logout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder:
@@ -71,120 +41,171 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
     );
-    if (shouldLogout != true || !mounted) return;
+    if (shouldLogout != true || !context.mounted) return;
 
     try {
-      await Provider.of<ProtheusAuth>(context, listen: false).logout();
-      if (!mounted) return;
+      await context.read<ProtheusAuth>().logout();
+      if (!context.mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (_) => false,
       );
     } catch (error) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao encerrar sess\u00e3o: $error'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Erro ao encerrar sessão: $error')),
       );
     }
   }
 
-  late double _startX;
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onHorizontalDragStart: (details) {
-        _startX = details.globalPosition.dx;
-      },
-      onHorizontalDragUpdate: (details) {
-        final currentX = details.globalPosition.dx;
-        if (currentX - _startX > 50 && _startX < 50 && !_isMenuOpen) {
-          _toggleMenu();
-        } else if (_startX - currentX > 50 && _isMenuOpen) {
-          _toggleMenu();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundColor,
-        body: Stack(
-          children: [
-            // Conteúdo principal
-            _currentScreen,
-
-            // Overlay
-            if (_isMenuOpen)
-              GestureDetector(
-                onTap: _toggleMenu,
-                child: Container(color: Colors.black.withOpacity(0.5)),
-              ),
-
-            // Menu lateral
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              left: _isMenuOpen ? 0 : -250,
-              top: 0,
-              bottom: 0,
-              width: 250,
-              child: Container(
-                color: Colors.white,
-                child: Column(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('IBAR'),
+        actions: [
+          IconButton(
+            tooltip: 'Sair',
+            onPressed: () => _logout(context),
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+                color: AppColors.primaryDarkColor,
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 80,
-                      width: double.infinity,
-                      color: AppColors.primaryDarkColor,
-                      padding: const EdgeInsets.all(16),
-                      alignment: Alignment.centerLeft,
-                      child: const Text(
-                        'Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Icon(Icons.apartment, color: Colors.white, size: 32),
+                    SizedBox(height: 12),
+                    Text(
+                      'IBAR',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Expanded(
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: [
-                          MenuItem(
-                            icon: Icons.check_circle_outline,
-                            text: 'Aprovações',
-                            onTap: () => _navigateTo('approvals'),
+                    SizedBox(height: 4),
+                    Text('Navegação', style: TextStyle(color: Colors.white70)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(12),
+                  children: [
+                    MenuItem(
+                      icon: Icons.check_circle_outline,
+                      text: 'Aprovações',
+                      onTap:
+                          () => _openScreenFromDrawer(
+                            context,
+                            const ApprovalsScreen(),
                           ),
-                          MenuItem(
-                            icon: Icons.search,
-                            text: 'Consultas',
-                            onTap: () => _navigateTo('queries'),
+                    ),
+                    MenuItem(
+                      icon: Icons.search,
+                      text: 'Consultas',
+                      onTap:
+                          () => _openScreenFromDrawer(
+                            context,
+                            const QueriesScreen(),
                           ),
-                          MenuItem(
-                            icon: Icons.settings,
-                            text: 'Catraca',
-                            onTap: () => _navigateTo('catraca'),
+                    ),
+                    MenuItem(
+                      icon: Icons.account_tree_outlined,
+                      text: 'Workflow',
+                      onTap:
+                          () => _openScreenFromDrawer(
+                            context,
+                            const WorkflowScreen(),
                           ),
-                          MenuItem(
-                            icon: Icons.exit_to_app,
-                            text: 'Sair',
-                            onTap: _logout,
-                          ),
-                        ],
-                      ),
+                    ),
+                    MenuItem(
+                      icon: Icons.settings_outlined,
+                      text: 'Catraca',
+                      onTap:
+                          () => _openScreenFromDrawer(context, const Catraca()),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              const Divider(height: 1),
+              MenuItem(
+                icon: Icons.logout,
+                text: 'Sair',
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout(context);
+                },
+              ),
+            ],
+          ),
         ),
-        appBar: AppBar(
-          title: const Text('IBAR'),
-          leading: IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: _toggleMenu,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bem-vindo!',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Selecione uma opção para continuar.',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 24),
+                  buildFullWidthCard(
+                    context,
+                    icon: Icons.check_circle_outline,
+                    title: 'Aprovações',
+                    description: 'Acesse requisições e itens pendentes.',
+                    onTap: () => _openScreen(context, const ApprovalsScreen()),
+                  ),
+                  const SizedBox(height: 12),
+                  buildFullWidthCard(
+                    context,
+                    icon: Icons.search,
+                    title: 'Consultas',
+                    description:
+                        'Consulte informações quando a integração estiver disponível.',
+                    onTap: () => _openScreen(context, const QueriesScreen()),
+                  ),
+                  const SizedBox(height: 12),
+                  buildFullWidthCard(
+                    context,
+                    icon: Icons.account_tree_outlined,
+                    title: 'Workflow',
+                    description:
+                        'Acompanhe fluxos quando a integração estiver disponível.',
+                    onTap: () => _openScreen(context, const WorkflowScreen()),
+                  ),
+                  const SizedBox(height: 12),
+                  buildFullWidthCard(
+                    context,
+                    icon: Icons.settings_outlined,
+                    title: 'Catraca',
+                    description: 'Solicite a liberação de acesso.',
+                    onTap: () => _openScreen(context, const Catraca()),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

@@ -23,10 +23,12 @@ class _Catraca extends State<Catraca> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  final MaskedTextController _horaInicialController =  MaskedTextController(mask: '00.00');
-  final MaskedTextController _horaFinalController =  MaskedTextController(mask: '00.00');
-
-
+  final MaskedTextController _horaInicialController = MaskedTextController(
+    mask: '00.00',
+  );
+  final MaskedTextController _horaFinalController = MaskedTextController(
+    mask: '00.00',
+  );
 
   String? _validateHora(String value) {
     final parts = value.split('.');
@@ -46,7 +48,6 @@ class _Catraca extends State<Catraca> {
     }
     return null;
   }
-
 
   @override
   void dispose() {
@@ -102,7 +103,9 @@ class _Catraca extends State<Catraca> {
     if (_horaextra &&
         (_horaInicialController.text.isEmpty ||
             _horaFinalController.text.isEmpty)) {
-      setState(() => _errorMessage = 'Preencha os hor\u00e1rios para hora extra');
+      setState(
+        () => _errorMessage = 'Preencha os hor\u00e1rios para hora extra',
+      );
       return;
     }
 
@@ -157,9 +160,10 @@ class _Catraca extends State<Catraca> {
       if (error is ProtheusApiHttpException && error.statusCode == 401) {
         await _expireSession();
       } else if (mounted) {
-        final message = error is ProtheusApiNetworkException
-            ? 'Erro de conex\u00e3o: $error'
-            : 'Falha ao liberar a catraca: $error';
+        final message =
+            error is ProtheusApiNetworkException
+                ? 'Erro de conex\u00e3o: $error'
+                : 'Falha ao liberar a catraca: $error';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
@@ -178,119 +182,142 @@ class _Catraca extends State<Catraca> {
     if (_errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_errorMessage!),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(_errorMessage!), backgroundColor: Colors.red),
         );
         setState(() => _errorMessage = null); // Limpa após mostrar
       });
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Liberação de Catraca'),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _matriculaController,
-              decoration: const InputDecoration(
-                hintText: 'Digite a Matricula...',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CheckboxListTile(
-                  title: const Text('Atraso'),
-                  value: _atraso,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _atraso = value ?? false;
-                      if (_atraso) {
-                        _compensar = false; // Desmarca compensar se atraso for marcado
-                        _horaextra = false; // Desmarca hora extra se atraso for marcado
-                      }
-
-                    });
-                  },
-                ),
-                CheckboxListTile(
-                  title: const Text('Compensar'),
-                  value: _compensar,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _compensar = value ?? false;
-                      if (_compensar) {
-                        _atraso = false; // Desmarca atraso se compensar for marcado
-                        _horaextra = false; // Desmarca hora extra se compensar for marcado
-                      }
-                    });
-                  },
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CheckboxListTile(
-                      title: const Text('Hora Extra'),
-                      value: _horaextra,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          _horaextra = value ?? false;
-                          if (_horaextra) {
-                            _atraso = false; // Uncheck "Atraso" if "Hora Extra" is checked
-                            _compensar = false; // Uncheck "Compensar" if "Hora Extra" is checked
-                          }
-                        });
-                      },
+      appBar: AppBar(title: const Text('Liberação de Catraca')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Liberação de acesso',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Informe a matrícula e selecione o motivo da solicitação.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 20),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextField(
+                            controller: _matriculaController,
+                            decoration: const InputDecoration(
+                              labelText: 'Matrícula',
+                              hintText: 'Digite a matrícula',
+                              prefixIcon: Icon(Icons.badge_outlined),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 12),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Atraso'),
+                            value: _atraso,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _atraso = value ?? false;
+                                if (_atraso) {
+                                  _compensar = false;
+                                  _horaextra = false;
+                                }
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Compensar'),
+                            value: _compensar,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _compensar = value ?? false;
+                                if (_compensar) {
+                                  _atraso = false;
+                                  _horaextra = false;
+                                }
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Hora Extra'),
+                            value: _horaextra,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _horaextra = value ?? false;
+                                if (_horaextra) {
+                                  _atraso = false;
+                                  _compensar = false;
+                                }
+                              });
+                            },
+                          ),
+                          if (_horaextra) ...[
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: _horaInicialController,
+                              decoration: InputDecoration(
+                                labelText: 'Hora Inicial',
+                                hintText: 'Ex.: 08.00',
+                                prefixIcon: const Icon(Icons.schedule),
+                                errorText: _validateHora(
+                                  _horaInicialController.text,
+                                ),
+                              ),
+                              keyboardType: TextInputType.datetime,
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _horaFinalController,
+                              decoration: InputDecoration(
+                                labelText: 'Hora Final',
+                                hintText: 'Ex.: 12.00',
+                                prefixIcon: const Icon(Icons.schedule),
+                                errorText: _validateHora(
+                                  _horaFinalController.text,
+                                ),
+                              ),
+                              keyboardType: TextInputType.datetime,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                    if (_horaextra) ...[
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _horaInicialController,
-                        decoration: InputDecoration(
-                          labelText: 'Hora Inicial',
-                          hintText: 'Digite a hora inicial (ex: 08.00)',
-                          border: OutlineInputBorder(),
-                          errorText: _validateHora(_horaInicialController.text),
-                        ),
-                        keyboardType: TextInputType.datetime,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _horaFinalController,
-                        decoration: InputDecoration(
-                          labelText: 'Hora Final',
-                          hintText: 'Digite a hora final (ex: 12.00)',
-                          border: OutlineInputBorder(),
-                          errorText: _validateHora(_horaFinalController.text),
-                        ),
-                        keyboardType: TextInputType.datetime,
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _liberarCatraca,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _liberarCatraca,
+                    child:
+                        _isLoading
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text('Liberar a Catraca'),
+                  ),
+                ],
               ),
-              child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Liberar a Catraca'),
             ),
-          ],
+          ),
         ),
       ),
     );

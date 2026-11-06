@@ -70,20 +70,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
     try {
       final confirmado = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Confirmar Aprova\u00e7\u00e3o'),
-          content: Text('Deseja aprovar a requisi\u00e7\u00e3o #${requisicao['num']}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Confirmar Aprova\u00e7\u00e3o'),
+              content: Text(
+                'Deseja aprovar a requisi\u00e7\u00e3o #${requisicao['num']}?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text(
+                    'Aprovar',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Aprovar', style: TextStyle(color: Colors.green)),
-            ),
-          ],
-        ),
       );
       if (!mounted) return;
 
@@ -101,7 +107,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
         if (nCount > 0 && mounted && nCount == items.length) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Requisi\u00e7\u00e3o #${requisicao['num']} aprovada!')),
+            SnackBar(
+              content: Text(
+                'Requisi\u00e7\u00e3o #${requisicao['num']} aprovada!',
+              ),
+            ),
           );
           _fetchRequisicoes();
         } else {
@@ -126,7 +136,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Digite a justificativa para rejeitar #${requisicao['num']}:'),
+                Text(
+                  'Digite a justificativa para rejeitar #${requisicao['num']}:',
+                ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: controller,
@@ -145,7 +157,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, controller.text),
-                child: const Text('Rejeitar', style: TextStyle(color: Colors.red)),
+                child: const Text(
+                  'Rejeitar',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           );
@@ -164,7 +179,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
         );
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Requisi\u00e7\u00e3o #${requisicao['num']} rejeitada!')),
+          SnackBar(
+            content: Text(
+              'Requisi\u00e7\u00e3o #${requisicao['num']} rejeitada!',
+            ),
+          ),
         );
         _fetchRequisicoes();
       }
@@ -181,15 +200,23 @@ class _OrdersScreenState extends State<OrdersScreen> {
     // Mostra o primeiro item completo
     if (items.isNotEmpty) {
       final primeiroItem = items.first;
-      final descricao = primeiroItem['descricao']?.toString().trim() ?? 'Sem descrição';
-      final aplicacao = primeiroItem['aplicacao']?.toString().trim() ?? 'Sem aplicação';
+      final descricao =
+          primeiroItem['descricao']?.toString().trim() ?? 'Sem descrição';
+      final aplicacao =
+          primeiroItem['aplicacao']?.toString().trim() ?? 'Sem aplicação';
 
       buffer.writeln('Total de Itens: ${items.length}');
       buffer.writeln('item: ${primeiroItem['item']}');
-      buffer.writeln('Produto: ${primeiroItem['produto']?.toString().trim() ?? 'N/A'}');
+      buffer.writeln(
+        'Produto: ${primeiroItem['produto']?.toString().trim() ?? 'N/A'}',
+      );
       buffer.writeln('Qtd: ${primeiroItem['qtde']}');
-      buffer.writeln('Descrição: ${descricao.length > 30 ? '${descricao.substring(0, 30)}...' : descricao}');
-      buffer.writeln('Aplicação: ${aplicacao.length > 30 ? '${aplicacao.substring(0, 30)}...' : aplicacao}');
+      buffer.writeln(
+        'Descrição: ${descricao.length > 30 ? '${descricao.substring(0, 30)}...' : descricao}',
+      );
+      buffer.writeln(
+        'Aplicação: ${aplicacao.length > 30 ? '${aplicacao.substring(0, 30)}...' : aplicacao}',
+      );
 
       // Se houver mais itens, mostra indicador
       if (items.length > 1) {
@@ -201,7 +228,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
     return buffer.toString();
   }
-
 
   Future<void> _fetchRequisicoes() async {
     final token = _sessionTokenOrLogin();
@@ -226,9 +252,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
       }
       if (!mounted) return;
       setState(() {
-        errorMessage = error is ProtheusApiNetworkException
-            ? 'Erro de conex\u00e3o: $error'
-            : 'Erro ao carregar requisi\u00e7\u00f5es: $error';
+        errorMessage =
+            error is ProtheusApiNetworkException
+                ? 'Erro de conex\u00e3o: $error'
+                : 'Erro ao carregar requisi\u00e7\u00f5es: $error';
         isLoading = false;
       });
     }
@@ -257,10 +284,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
       await _expireSession();
       return;
     }
-    final message = error is ProtheusApiNetworkException
-        ? 'Erro de conex\u00e3o: $error'
-        : 'Erro ao $operation: $error';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    final message =
+        error is ProtheusApiNetworkException
+            ? 'Erro de conex\u00e3o: $error'
+            : 'Erro ao $operation: $error';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _expireSession() async {
@@ -286,53 +316,100 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Requisições de Compras'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Lista de requisições pendentes de aprovação:',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-
-            if (isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (errorMessage.isNotEmpty)
-              Center(child: Text(errorMessage))
-            else if (requisicoes.isEmpty)
-                const Center(child: Text('Nenhuma requisição pendente'))
-              else
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: requisicoes.length,
-                    itemBuilder: (context, index) {
-                      final requisicao = requisicoes[index];
-                      final items = requisicao['itemsrc'] ?? [];
-
-                      //return Column(
-                      return GestureDetector(
-                          onLongPress: () => _showActionMenu(context, requisicao),
+      appBar: AppBar(title: const Text('Requisições de Compras')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Lista de requisições pendentes de aprovação',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child:
+                    isLoading
+                        ? const Center(
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                            const SizedBox(height: 16),
-                              buildFullWidthCard(
-                              context,
-                              icon: (Icons.pending_actions),
-                              title: 'Requisição #${requisicao['num'] ?? 'N/A'}',
-                              description: _buildDescription(items),
-                              onTap: () => _showDetailsDialog(context, requisicao),
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Carregando requisições...'),
+                            ],
+                          ),
+                        )
+                        : errorMessage.isNotEmpty
+                        ? Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.cloud_off_outlined,
+                                  size: 40,
+                                  color: Colors.redAccent,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(errorMessage, textAlign: TextAlign.center),
+                                const SizedBox(height: 16),
+                                OutlinedButton.icon(
+                                  onPressed: _fetchRequisicoes,
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Tentar novamente'),
+                                ),
+                              ],
                             ),
-                        ])
-                      );
-                    },
-                  ),
-                ),
-          ],
+                          ),
+                        )
+                        : requisicoes.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.inbox_outlined,
+                                size: 44,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Nenhuma requisição pendente',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView.separated(
+                          itemCount: requisicoes.length,
+                          separatorBuilder:
+                              (_, _) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final requisicao = requisicoes[index];
+                            final items = requisicao['itemsrc'] ?? [];
+
+                            return GestureDetector(
+                              onLongPress:
+                                  () => _showActionMenu(context, requisicao),
+                              child: buildFullWidthCard(
+                                context,
+                                icon: Icons.pending_actions,
+                                title:
+                                    'Requisição #${requisicao['num'] ?? 'N/A'}',
+                                description: _buildDescription(items),
+                                onTap:
+                                    () =>
+                                        _showDetailsDialog(context, requisicao),
+                              ),
+                            );
+                          },
+                        ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -343,44 +420,54 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  void _showDetailsDialog(BuildContext context, Map<String, dynamic> requisicao) {
+  void _showDetailsDialog(
+    BuildContext context,
+    Map<String, dynamic> requisicao,
+  ) {
     final items = requisicao['itemsrc'] as List? ?? [];
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Detalhes da Requisição #${requisicao['num']}'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Itens da Requisição:', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-
-              if (items.isEmpty)
-                const Text('Nenhum item encontrado')
-              else
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6, // Altura máxima
-                  width: double.maxFinite,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const ClampingScrollPhysics(),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) => _buildItemWidget(items[index]),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Detalhes da Requisição #${requisicao['num']}'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Itens da Requisição:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ),
+                  const SizedBox(height: 10),
+
+                  if (items.isEmpty)
+                    const Text('Nenhum item encontrado')
+                  else
+                    SizedBox(
+                      height:
+                          MediaQuery.of(context).size.height *
+                          0.6, // Altura máxima
+                      width: double.maxFinite,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: const ClampingScrollPhysics(),
+                        itemCount: items.length,
+                        itemBuilder:
+                            (context, index) => _buildItemWidget(items[index]),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Fechar'),
+              ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -398,7 +485,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Item: ${item['item']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            'Item: ${item['item']}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
           Text('Produto: ${item['produto']?.toString().trim() ?? 'N/A'}'),
           const SizedBox(height: 4),
@@ -413,6 +503,4 @@ class _OrdersScreenState extends State<OrdersScreen> {
       ),
     );
   }
-
-
 }

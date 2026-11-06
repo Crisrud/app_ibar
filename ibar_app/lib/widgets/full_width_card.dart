@@ -3,48 +3,49 @@ import 'package:ibar_app/constants/colors.dart';
 
 Widget buildFullWidthCard(
   BuildContext context, {
-  IconData ?icon,
+  IconData? icon,
   required String title,
   required String description,
   required VoidCallback onTap,
 }) {
   return Card(
-    margin: EdgeInsets.zero,
     child: InkWell(
-      borderRadius: BorderRadius.circular(8),
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(right:20), // Ajuste este valor conforme necessário
-              child: Icon(
-                icon,
-                size: 34,
-                color: AppColors.primaryColor,
+            if (icon != null) ...[
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: AppColors.primaryColor, size: 25),
               ),
-            ),
-            //Icon(icon, size: 40, color: AppColors.primaryColor),
-            const SizedBox(height: 16),
+              const SizedBox(width: 16),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 16),
-                  Text(description, style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 6),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, color: AppColors.mutedColor),
           ],
         ),
       ),
     ),
   );
-}
-
-// Método auxiliar para navegação
-void navigateTo(BuildContext context, Widget screen) {
-  Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
 }

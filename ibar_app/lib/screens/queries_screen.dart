@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ibar_app/widgets/unavailable_feature_notice.dart';
 
 class QueriesScreen extends StatelessWidget {
   const QueriesScreen({super.key});
@@ -6,38 +7,12 @@ class QueriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Consultas'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Consultas',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Buscar...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                contentPadding: const EdgeInsets.all(16),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text('Pesquisar'),
-              ),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: const Text('Consultas')),
+      body: const UnavailableFeatureNotice(
+        title: 'Consultas',
+        description:
+            'As consultas ainda não estão disponíveis. Esta opção será habilitada '
+            'quando a integração estiver concluída.',
       ),
     );
   }
