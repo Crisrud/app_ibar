@@ -15,7 +15,7 @@
 - O app Flutter fica em `ibar_app/`; os comandos abaixo devem ser executados nesse diretório.
 - O teste existente ainda espera o contador do template e falha no baseline porque `MyApp` abre a tela de login. Substituí-lo por um teste do IBAR é parte deste trabalho.
 - A cópia original tem mudanças locais não commitadas em `catraca.dart`, `copia_catraca.dart`, `orders_screen.dart` e `protheus_auth.dart`. Este plano será executado na worktree isolada e não deve sobrescrevê-las.
-- Os endpoints atuais usam HTTP e cabeçalhos de autorização mascarados/fixos. Antes de migrar operações reais para o novo cliente, confirmar com a equipe Protheus HTTPS, URLs de ambiente, formato do cabeçalho, respostas e identificadores esperados. Não inventar credenciais nem apresentar sucesso falso.
+- Os endpoints atuais usam HTTP. O formato confirmado é `Authorization: Bearer <token>`, mas HTTPS ainda depende da equipe Protheus. Antes de migrar operações reais para o novo cliente, confirmar HTTPS, URLs de ambiente, respostas e identificadores esperados. Não inventar credenciais nem apresentar sucesso falso.
 
 ## Task 1: Substituir o teste de contador do template
 
@@ -98,7 +98,7 @@ Injetar `http.Client`, centralizar timeouts e configuração por ambiente, e exp
 Run: `flutter test test/services/protheus_api_client_test.dart`
 Expected: PASS para sucesso, JSON inválido e status HTTP não bem-sucedido.
 
-**Gate de integração:** Não escolher `Bearer`, mudar `http` para `https` ou trocar identificadores dos endpoints sem confirmação da equipe Protheus. Se o contrato ainda não estiver disponível, concluir a estrutura testável e deixar a migração de operações reais explicitamente pendente.
+**Gate de integração:** O usuário confirmou o formato `Authorization: Bearer <token>`, mas informou que os serviços só estão disponíveis por HTTP. Não enviar tokens por HTTP em builds de produção. A configuração de desenvolvimento pode manter os endereços atuais para testes na rede interna; em release, recusar a configuração HTTP com uma mensagem explícita e acionável até a equipe Protheus disponibilizar HTTPS. Não trocar o esquema/hosts dos endpoints nem identificadores de operação sem confirmação.
 
 ## Task 4: Migrar as operações existentes para o cliente compartilhado
 
