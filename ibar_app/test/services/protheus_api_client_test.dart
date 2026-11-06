@@ -22,9 +22,11 @@ void main() {
       expect(config.requestTimeout, const Duration(seconds: 30));
     });
 
-    test('rejects HTTP URLs for production with an actionable message', () {
+    test('rejects HTTP requests for production with an actionable message', () {
+      final config = ApiConfig.production();
+
       expect(
-        () => ApiConfig.production(),
+        () => config.validateRequestUri(config.serviceUri('/api/requisicoes')),
         throwsA(
           isA<ProtheusApiConfigurationException>()
               .having((error) => error.message, 'message', contains('HTTPS'))
@@ -49,6 +51,18 @@ void main() {
         Uri.parse('https://protheus.example.com:10099/api/requisicoes'),
       );
     });
+
+    test(
+      'production configuration can be created before HTTPS is configured',
+      () {
+        final config = ApiConfig.production(
+          serviceBaseUri: Uri.parse('http://mail.ibar.com.br:10099'),
+          approvalBaseUri: Uri.parse('http://192.168.101.244:10111'),
+        );
+
+        expect(config.isProduction, isTrue);
+      },
+    );
 
     test('release validation rejects HTTP with a development config', () {
       final config = ApiConfig.development();

@@ -13,8 +13,10 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ProtheusAuth()),
-        Provider<ApiConfig>(create: (_) => ApiConfig.development()),
+        Provider<ApiConfig>(create: (_) => ApiConfig.forBuild()),
+        ChangeNotifierProvider(
+          create: (context) => ProtheusAuth(config: context.read<ApiConfig>()),
+        ),
         Provider<ProtheusApiClient>(
           create:
               (context) => ProtheusApiClient(

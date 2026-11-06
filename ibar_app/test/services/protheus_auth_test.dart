@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:ibar_app/services/api_config.dart';
 import 'package:ibar_app/services/protheus_auth.dart';
 import 'package:ibar_app/services/token_storage.dart';
 
@@ -34,6 +35,65 @@ class MemoryTokenStorage implements TokenStorage {
 }
 
 void main() {
+  test(
+    'release authentication blocks HTTP before sending credentials',
+    () async {
+      var requestCount = 0;
+      final config = ApiConfig.production(
+        serviceBaseUri: Uri.parse('http://mail.ibar.com.br:10099'),
+        approvalBaseUri: Uri.parse('http://192.168.101.244:10111'),
+      );
+      final auth = ProtheusAuth(
+        config: config,
+        tokenStorage: MemoryTokenStorage(),
+        client: MockClient((_) async {
+          requestCount++;
+          return http.Response('', 200);
+        }),
+      );
+
+      expect(
+        await auth.signUp('safe-test-user', 'safe-test-password'),
+        isFalse,
+      );
+      expect(auth.mensagemErro, contains('HTTPS'));
+      expect(auth.mensagemErro, contains('Protheus team'));
+      expect(requestCount, 0);
+    },
+  );
+
+  test(
+    'development authentication uses the original URL and credential format',
+    () async {
+      http.Request? capturedRequest;
+      final auth = ProtheusAuth(
+        config: ApiConfig.development(),
+        tokenStorage: MemoryTokenStorage(),
+        client: MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('', 401);
+        }),
+      );
+
+      expect(
+        await auth.signUp('safe-test-user', 'safe-test-password'),
+        isFalse,
+      );
+
+      expect(
+        capturedRequest!.url,
+        Uri.parse('http://mail.ibar.com.br:10099/api/oauth2/v1/token'),
+      );
+      expect(
+        capturedRequest!.headers['content-type'],
+        'application/x-www-form-urlencoded',
+      );
+      expect(capturedRequest!.headers['grant_type'], 'password');
+      expect(capturedRequest!.headers['username'], 'safe-test-user');
+      expect(capturedRequest!.headers['password'], 'safe-test-password');
+    },
+  );
+
   test('restores a saved token when initializing the session', () async {
     final storage = MemoryTokenStorage('saved-token');
     final auth = ProtheusAuth(

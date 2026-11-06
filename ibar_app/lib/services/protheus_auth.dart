@@ -3,12 +3,17 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'api_config.dart';
 import 'token_storage.dart';
 
 class ProtheusAuth with ChangeNotifier {
-  ProtheusAuth({TokenStorage? tokenStorage, http.Client? client})
-    : _tokenStorage = tokenStorage ?? SecureTokenStorage(),
-      _client = client ?? http.Client();
+  ProtheusAuth({
+    ApiConfig? config,
+    TokenStorage? tokenStorage,
+    http.Client? client,
+  }) : _config = config ?? ApiConfig.forBuild(),
+       _tokenStorage = tokenStorage ?? SecureTokenStorage(),
+       _client = client ?? http.Client();
 
   String? _mensagem;
   String? _token;
@@ -16,16 +21,18 @@ class ProtheusAuth with ChangeNotifier {
   bool _isInitialized = false;
   bool _isRestoring = false;
 
+  final ApiConfig _config;
   final TokenStorage _tokenStorage;
   final http.Client _client;
-  final String _url = 'http://187.50.41.226:10099/api/oauth2/v1/token';
 
   String? get token => _token;
   String? get mensagemErro => _mensagem;
-  String get url => _url;
+  String get url => _tokenUri.toString();
   String? get sessionError => _sessionError;
   bool get isInitialized => _isInitialized;
   bool get isRestoring => _isRestoring;
+
+  Uri get _tokenUri => _config.serviceUri('/api/oauth2/v1/token');
 
   Future<void> restoreSession() async {
     _isRestoring = true;
@@ -54,10 +61,19 @@ class ProtheusAuth with ChangeNotifier {
   }
 
   Future<bool> signUp(String usuario, String pass) async {
+    try {
+      _config.validateRequestUri(_tokenUri);
+    } on ProtheusApiConfigurationException catch (error) {
+      _mensagem = error.message;
+      _token = null;
+      notifyListeners();
+      return false;
+    }
+
     http.Response response;
     try {
       response = await _client.post(
-        Uri.parse(_url),
+        _tokenUri,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'grant_type': 'password',

@@ -1,5 +1,14 @@
 import 'package:flutter/foundation.dart';
 
+const String _serviceBaseUrl = String.fromEnvironment(
+  'PROTHEUS_SERVICE_BASE_URL',
+  defaultValue: 'http://mail.ibar.com.br:10099',
+);
+const String _approvalBaseUrl = String.fromEnvironment(
+  'PROTHEUS_APPROVAL_BASE_URL',
+  defaultValue: 'http://192.168.101.244:10111',
+);
+
 class ApiConfig {
   factory ApiConfig.development({
     Uri? serviceBaseUri,
@@ -7,10 +16,8 @@ class ApiConfig {
     Duration requestTimeout = const Duration(seconds: 30),
   }) {
     return ApiConfig._(
-      serviceBaseUri:
-          serviceBaseUri ?? Uri.parse('http://mail.ibar.com.br:10099'),
-      approvalBaseUri:
-          approvalBaseUri ?? Uri.parse('http://192.168.101.244:10111'),
+      serviceBaseUri: serviceBaseUri ?? Uri.parse(_serviceBaseUrl),
+      approvalBaseUri: approvalBaseUri ?? Uri.parse(_approvalBaseUrl),
       requestTimeout: requestTimeout,
       isProduction: false,
     );
@@ -22,10 +29,8 @@ class ApiConfig {
     Duration requestTimeout = const Duration(seconds: 30),
   }) {
     return ApiConfig._(
-      serviceBaseUri:
-          serviceBaseUri ?? Uri.parse('http://mail.ibar.com.br:10099'),
-      approvalBaseUri:
-          approvalBaseUri ?? Uri.parse('http://192.168.101.244:10111'),
+      serviceBaseUri: serviceBaseUri ?? Uri.parse(_serviceBaseUrl),
+      approvalBaseUri: approvalBaseUri ?? Uri.parse(_approvalBaseUrl),
       requestTimeout: requestTimeout,
       isProduction: true,
     );
@@ -57,10 +62,6 @@ class ApiConfig {
       throw const ProtheusApiConfigurationException(
         'The API request timeout must be greater than zero.',
       );
-    }
-    if (isProduction) {
-      _requireHttps(serviceBaseUri);
-      _requireHttps(approvalBaseUri);
     }
   }
 
