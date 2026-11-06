@@ -85,10 +85,13 @@ void main() {
 
       final result = await client.getJson(
         config.serviceUri('/api/requisicoes'),
-        token: 'access-token',
+        token: 'test-access-token',
       );
 
-      expect(capturedRequest!.headers['authorization'], 'Bearer access-token');
+      expect(
+        capturedRequest!.headers['authorization'],
+        'Bearer test-access-token',
+      );
       expect(result, {
         'items': [1, 2],
       });
